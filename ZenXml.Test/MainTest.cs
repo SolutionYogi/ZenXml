@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using NLog;
@@ -121,6 +123,17 @@ namespace ZenXml.Test
             foreach(var customer in zenXml.Root.Customers)
             {
                 Logger.Info(customer.CustomerID);
+            }
+        }
+
+        [Fact]
+        public void TestCustomerWithTitleManager()
+        {
+            var zenXml = ZenXmlObject.CreateFromXContainer(CustomerOrder);
+            var customers = (IEnumerable<dynamic>) zenXml.Root.Customers;
+            foreach(var customer in customers.Where(x => x.ContactTitle.Equals("Marketing Manager", StringComparison.OrdinalIgnoreCase)))
+            {
+                Logger.Info(customer.FullAddress.PostalCode);
             }
         }
     }
