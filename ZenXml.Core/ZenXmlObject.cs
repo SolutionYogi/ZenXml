@@ -13,6 +13,8 @@ namespace ZenXml.Core
 
         private const string InnerTextPropertyName = "InnerText";
 
+        private const string AsEnumerableMethodName = "AsEnumerable";
+
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly XContainer _container;
@@ -80,6 +82,24 @@ namespace ZenXml.Core
             return new ZenXmlObject(document, comparison);
         }
 
+        public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+        {
+            Logger.Info("Method called " + binder.CallInfo.ArgumentCount);
+            return base.TryInvoke(binder, args, out result);
+        }
+
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        {
+            if(binder.Name.Equals(AsEnumerableMethodName))
+            {
+                result = _container.Elements().Select(x => new ZenXmlObject(x, _comparison));
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             Logger.Trace(string.Format("Binder.Name: {0}", binder.Name));
@@ -134,7 +154,7 @@ namespace ZenXml.Core
 
                 if(element.HasElements)
                 {
-                    result = element.Elements().Select(x => new ZenXmlObject(x, _comparison));
+                    result = new ZenXmlObject(element, _comparison);
                     return true;
                 }
 

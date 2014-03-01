@@ -120,7 +120,8 @@ namespace ZenXml.Test
         public void TestCustomers()
         {
             var zenXml = ZenXmlObject.CreateFromXContainer(CustomerOrder);
-            foreach(var customer in zenXml.Root.Customers)
+            var customers = (IEnumerable<dynamic>) zenXml.Root.Customers.AsEnumerable();
+            foreach(var customer in customers)
             {
                 Logger.Info(customer.CustomerID);
             }
@@ -130,7 +131,7 @@ namespace ZenXml.Test
         public void TestCustomerWithTitleManager()
         {
             var zenXml = ZenXmlObject.CreateFromXContainer(CustomerOrder);
-            var customers = (IEnumerable<dynamic>) zenXml.Root.Customers;
+            var customers = (IEnumerable<dynamic>) zenXml.Root.Customers.AsEnumerable();
             foreach(var customer in customers.Where(x => x.ContactTitle.Equals("Marketing Manager", StringComparison.OrdinalIgnoreCase)))
             {
                 Logger.Info(customer.FullAddress.PostalCode);
