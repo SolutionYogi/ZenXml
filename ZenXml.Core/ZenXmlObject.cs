@@ -126,9 +126,15 @@ namespace ZenXml.Core
             {
                 var element = elements.Single();
 
-                if (!element.HasElements && !element.HasAttributes)
+                if(!element.HasElements && !element.HasAttributes)
                 {
                     result = element.Value;
+                    return true;
+                }
+
+                if(element.HasElements)
+                {
+                    result = element.Elements().Select(x => new ZenXmlObject(x, _comparison));
                     return true;
                 }
 

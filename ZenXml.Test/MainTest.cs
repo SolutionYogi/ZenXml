@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
+using System.Xml.Linq;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -14,6 +17,36 @@ namespace ZenXml.Test
         public MainTest()
         {
             ConfigureNLog();
+        }
+
+        private static XDocument GetXmlFile(string xmlFileName)
+        {
+            if(string.IsNullOrWhiteSpace(xmlFileName))
+                throw new ArgumentNullException("xmlFileName");
+
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+
+            var directoryName = Path.GetDirectoryName(assembly.Location);
+
+            if(string.IsNullOrWhiteSpace(directoryName))
+                throw new InvalidOperationException(string.Format("Could not identify Directory Path from Location {0}", assembly.Location));
+
+            var finalFilePath = Path.Combine(directoryName, "XmlFiles", xmlFileName);
+
+            if(! File.Exists(finalFilePath))
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Could not find file with name [{0}] at location [{1}]. Have you verified that the xml file is included in the project and CopyOutput is set to 'CopyAlways'?",
+                        xmlFileName, finalFilePath));
+            }
+
+            return XDocument.Load(finalFilePath);
+        }
+
+        private static XDocument CustomerOrder
+        {
+            get { return GetXmlFile("CustomerOrder.xml"); }
         }
 
         private static void ConfigureNLog()
@@ -46,38 +79,48 @@ namespace ZenXml.Test
         [Fact]
         public void TestRoot()
         {
-            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
             Logger.Info(zenXml.Root.GetType());
         }
 
         [Fact]
         public void TestItem1()
         {
-            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
             Logger.Info((object) zenXml.Root.Item1);
         }
 
         [Fact]
         public void TestItem2()
         {
-            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
             Logger.Info((object) zenXml.Root.Item2.Attribute1);
         }
 
         [Fact]
         public void TestItem3()
         {
-            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
             Logger.Info((object) zenXml.Root.Item3.Item3_1);
         }
 
         [Fact]
         public void TestItem4()
         {
-            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
             foreach(var item4 in zenXml.Root.Item4)
             {
                 Logger.Info(item4.InnerText);
+            }
+        }
+
+        [Fact]
+        public void TestCustomers()
+        {
+            var zenXml = ZenXmlObject.CreateFromXContainer(CustomerOrder);
+            foreach(var customer in zenXml.Root.Customers)
+            {
+                Logger.Info(customer.CustomerID);
             }
         }
     }
