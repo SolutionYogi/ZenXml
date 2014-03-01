@@ -31,6 +31,16 @@ namespace ZenXml.Core
             get { return _container is XDocument; }
         }
 
+        private XElement Element
+        {
+            get { return Container as XElement; }
+        }
+
+        private bool IsXElement
+        {
+            get { return Container is XElement; }
+        }
+
         protected ZenXmlObject(XContainer container, StringComparison comparison)
         {
             if(container == null)
@@ -82,12 +92,6 @@ namespace ZenXml.Core
             return new ZenXmlObject(document, comparison);
         }
 
-        public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
-        {
-            Logger.Info("Method called " + binder.CallInfo.ArgumentCount);
-            return base.TryInvoke(binder, args, out result);
-        }
-
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             if(binder.Name.Equals(AsEnumerableMethodName))
@@ -98,16 +102,6 @@ namespace ZenXml.Core
 
             result = null;
             return false;
-        }
-
-        private XElement Element
-        {
-            get { return Container as XElement; }
-        }
-
-        private bool IsXElement
-        {
-            get { return Container is XElement; }
         }
 
         public override bool TryGetMember(GetMemberBinder binder, out object result)
