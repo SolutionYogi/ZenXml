@@ -9,6 +9,8 @@ namespace ZenXml.Core
 {
     public class ZenXmlObject : DynamicObject
     {
+        private const string RootPropertyName = "Root";
+
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly XContainer _container;
@@ -17,10 +19,7 @@ namespace ZenXml.Core
 
         public XContainer Container
         {
-            get
-            {
-                return _container;
-            }
+            get { return _container; }
         }
 
         private bool IsRoot
@@ -54,6 +53,7 @@ namespace ZenXml.Core
         {
             return CreateFromFile(xmlFilePath, StringComparison.OrdinalIgnoreCase);
         }
+
         public static dynamic CreateFromFile(string xmlFilePath, StringComparison comparison)
         {
             if(string.IsNullOrWhiteSpace(xmlFilePath))
@@ -82,7 +82,7 @@ namespace ZenXml.Core
         {
             Logger.Trace(string.Format("Binder.Name: {0}", binder.Name));
 
-            if(binder.Name.Equals("Root") && IsRoot)
+            if(binder.Name.Equals(RootPropertyName) && IsRoot)
             {
                 var root = (XDocument) _container;
                 Logger.Trace("Returning Root.");
