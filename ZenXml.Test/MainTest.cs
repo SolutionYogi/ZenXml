@@ -31,7 +31,9 @@ namespace ZenXml.Test
 
             <Item1>My Item 1</Item1>
             <Item2 Attribute1=""Test"">My Item 1</Item2>
-            
+            <Item3>
+                <Item3_1>My Item 3.1</Item3_1>
+            </Item3>    
         
         </Root>
 ";
@@ -55,6 +57,14 @@ namespace ZenXml.Test
         {
             var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
             Logger.Info((object) zenXml.Root.Item2.Attribute1);
+        }
+
+
+        [Fact]
+        public void TestItem3()
+        {
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            Logger.Info((object)zenXml.Root.Item3.Item3_1);
         }
     }
 }
