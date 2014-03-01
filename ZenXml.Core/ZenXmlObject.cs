@@ -100,6 +100,16 @@ namespace ZenXml.Core
             return false;
         }
 
+        private XElement Element
+        {
+            get { return Container as XElement; }
+        }
+
+        private bool IsXElement
+        {
+            get { return Container is XElement; }
+        }
+
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             Logger.Trace(string.Format("Binder.Name: {0}", binder.Name));
@@ -112,58 +122,67 @@ namespace ZenXml.Core
                 return true;
             }
 
-            if(binder.Name.Equals(InnerTextPropertyName))
-            {
-                var el = Container as XElement;
-                if(el == null)
-                    throw new InvalidOperationException("Can not use InnerText property for a container which is not an XElement.");
+            return IsXElement ? TryGetMemberXElement(binder, out result) : TryGetMemberXContainer(binder, out result);
+        }
 
-                result = el.Value;
+        private bool TryGetMemberXContainer(GetMemberBinder binder, out object result)
+        {
+            if(binder.Name.Equals(InnerTextPropertyName, _comparison))
+            {
+                result = Container.ToString();
                 return true;
             }
 
-            var asElement = Container as XElement;
+            Logger.Trace("TryGetMemberXContainer final case.");
+            result = null;
+            return false;
+        }
 
-            if(asElement != null)
+        private bool TryGetMemberXElement(GetMemberBinder binder, out object result)
+        {
+            if(binder.Name.Equals(InnerTextPropertyName, _comparison))
             {
-                var attribute = asElement.Attributes().SingleOrDefault(x => x.Name.LocalName.Equals(binder.Name, _comparison));
-                if(attribute != null)
-                {
-                    result = attribute.Value;
-                    return true;
-                }
+                result = Element.Value;
+                return true;
             }
 
-            var elements = Container.Elements().Where(x => x.Name.LocalName.Equals(binder.Name, _comparison)).ToList();
+            var attribute = GetAttribute(binder.Name);
 
-            if(elements.Count == 0)
+            if(attribute != null)
+            {
+                result = attribute.Value;
+                return true;
+            }
+
+            var matchingChilds = Element.Elements().Where(x => x.Name.LocalName.Equals(binder.Name, _comparison)).ToList();
+
+            if(matchingChilds.Count == 0)
             {
                 result = null;
                 return false;
             }
 
-            if(elements.Count == 1)
+            if(matchingChilds.Count == 1)
             {
-                var element = elements.Single();
+                var child = matchingChilds.Single();
 
-                if(!element.HasElements && !element.HasAttributes)
+                if(! child.HasElements && ! child.HasAttributes)
                 {
-                    result = element.Value;
+                    result = child.Value;
                     return true;
                 }
 
-                if(element.HasElements)
-                {
-                    result = new ZenXmlObject(element, _comparison);
-                    return true;
-                }
-
-                result = new ZenXmlObject(element, _comparison);
+                result = new ZenXmlObject(child, _comparison);
                 return true;
             }
 
-            result = elements.Select(x => new ZenXmlObject(x, _comparison));
+            result = matchingChilds.Select(x => new ZenXmlObject(x, _comparison));
             return true;
+        }
+
+        private XAttribute GetAttribute(string name)
+        {
+            return Element.Attributes().SingleOrDefault(x => x.Name.LocalName.Equals(name, _comparison));
         }
     }
 }
