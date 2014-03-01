@@ -11,6 +11,8 @@ namespace ZenXml.Core
     {
         private const string RootPropertyName = "Root";
 
+        private const string InnerTextPropertyName = "InnerText";
+
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly XContainer _container;
@@ -90,6 +92,16 @@ namespace ZenXml.Core
                 return true;
             }
 
+            if(binder.Name.Equals(InnerTextPropertyName))
+            {
+                var el = Container as XElement;
+                if(el == null)
+                    throw new InvalidOperationException("Can not use InnerText property for a container which is not an XElement.");
+
+                result = el.Value;
+                return true;
+            }
+
             var asElement = Container as XElement;
 
             if(asElement != null)
@@ -102,11 +114,19 @@ namespace ZenXml.Core
                 }
             }
 
-            var element = Container.Elements().SingleOrDefault(x => x.Name.LocalName.Equals(binder.Name, _comparison));
+            var elements = Container.Elements().Where(x => x.Name.LocalName.Equals(binder.Name, _comparison)).ToList();
 
-            if(element != null)
+            if(elements.Count == 0)
             {
-                if(!element.HasElements && !element.HasAttributes)
+                result = null;
+                return false;
+            }
+
+            if(elements.Count == 1)
+            {
+                var element = elements.Single();
+
+                if (!element.HasElements && !element.HasAttributes)
                 {
                     result = element.Value;
                     return true;
@@ -116,8 +136,7 @@ namespace ZenXml.Core
                 return true;
             }
 
-            Logger.Trace(string.Format("Could not find {0}", binder.Name));
-            result = null;
+            result = elements.Select(x => new ZenXmlObject(x, _comparison));
             return true;
         }
     }
