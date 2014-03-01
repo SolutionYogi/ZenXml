@@ -30,6 +30,7 @@ namespace ZenXml.Test
         <Root>
 
             <Item1>My Item 1</Item1>
+            <Item2 Attribute1=""Test"">My Item 1</Item2>
             
         
         </Root>

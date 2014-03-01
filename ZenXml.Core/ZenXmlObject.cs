@@ -11,73 +11,30 @@ namespace ZenXml.Core
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly XDocument _document;
+        private readonly XContainer _container;
 
-        private readonly ZenXmlObject _parent;
+        private readonly StringComparison _comparison;
 
-        private readonly StringComparison? _comparison;
-
-        private ZenXmlObject Parent
-        {
-            get { return _parent; }
-        }
-
-        public XDocument Document
+        public XContainer Container
         {
             get
             {
-                if(_document != null)
-                    return _document;
-
-                var currentParent = Parent;
-                var document = currentParent._document;
-                while(document == null)
-                {
-                    currentParent = currentParent.Parent;
-                    document =  currentParent._document;
-                }
-
-                return document;
-            }
-        }
-
-        public StringComparison Comparison
-        {
-            get
-            {
-                if(_comparison.HasValue)
-                    return _comparison.Value;
-
-                var currentParent = Parent;
-                var comparison = currentParent._comparison;
-                while(!comparison.HasValue)
-                {
-                    currentParent = currentParent.Parent;
-                    comparison = currentParent._comparison;
-                }
-
-                return comparison.Value;
+                return _container;
             }
         }
 
         private bool IsRoot
         {
-            get { return _document != null; }
+            get { return _container is XDocument; }
         }
 
-        private ZenXmlObject(ZenXmlObject parent)
+        protected ZenXmlObject(XContainer container, StringComparison comparison)
         {
-            _parent = parent;
-        }
+            if(container == null)
+                throw new ArgumentNullException("container");
 
-        protected ZenXmlObject(XDocument document, StringComparison comparison)
-        {
-            if(document == null)
-                throw new ArgumentNullException("document");
-
-            _document = document;
+            _container = container;
             _comparison = comparison;
-        
         }
 
         public static dynamic CreateFromXml(string xml)
@@ -90,7 +47,7 @@ namespace ZenXml.Core
             if(string.IsNullOrWhiteSpace(xml))
                 throw new ArgumentNullException("xml");
 
-            return CreateFromXDocument(XDocument.Parse(xml), comparison);
+            return CreateFromXContainer(XDocument.Parse(xml), comparison);
         }
 
         public static dynamic CreateFromFile(string xmlFilePath)
@@ -105,15 +62,15 @@ namespace ZenXml.Core
             if(! File.Exists(xmlFilePath))
                 throw new ArgumentException(string.Format("File specified by path {0} does not exist.", xmlFilePath));
 
-            return CreateFromXDocument(XDocument.Load(xmlFilePath), comparison);
+            return CreateFromXContainer(XDocument.Load(xmlFilePath), comparison);
         }
 
-        public static dynamic CreateFromXDocument(XDocument document)
+        public static dynamic CreateFromXContainer(XContainer document)
         {
-            return CreateFromXDocument(document, StringComparison.OrdinalIgnoreCase);
+            return CreateFromXContainer(document, StringComparison.OrdinalIgnoreCase);
         }
 
-        public static dynamic CreateFromXDocument(XDocument document, StringComparison comparison)
+        public static dynamic CreateFromXContainer(XContainer document, StringComparison comparison)
         {
             if(document == null)
                 throw new ArgumentNullException("document");
@@ -125,14 +82,14 @@ namespace ZenXml.Core
         {
             Logger.Trace(string.Format("Binder.Name: {0}", binder.Name));
 
-            if(binder.Name.Equals("Root"))
+            if(binder.Name.Equals("Root") && IsRoot)
             {
                 Logger.Trace("Returning Root.");
-                result = new ZenXmlObject(this);
+                result = new ZenXmlObject(Container, _comparison);
                 return true;
             }
 
-            var element = Document.Elements().SingleOrDefault(x => x.Name.LocalName.Equals(binder.Name, Comparison));
+            var element = Container.Elements().SingleOrDefault(x => x.Name.LocalName.Equals(binder.Name, _comparison));
 
             if(element != null)
             {
@@ -141,6 +98,9 @@ namespace ZenXml.Core
                     result = element.Value;
                     return true;
                 }
+
+                result = new ZenXmlObject(element, _comparison);
+                return true;
             }
 
             result = null;
