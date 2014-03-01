@@ -35,13 +35,26 @@ namespace ZenXml.Test
         
         </Root>
 ";
+
         [Fact]
         public void TestRoot()
         {
             var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
             Logger.Info(zenXml.Root.GetType());
-            
+        }
+
+        [Fact]
+        public void TestItem1()
+        {
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
             Logger.Info((object) zenXml.Root.Item1);
+        }
+
+        [Fact]
+        public void TestItem2()
+        {
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml, StringComparison.OrdinalIgnoreCase);
+            Logger.Info((object) zenXml.Root.Item2.Attribute1);
         }
     }
 }

@@ -84,9 +84,22 @@ namespace ZenXml.Core
 
             if(binder.Name.Equals("Root") && IsRoot)
             {
+                var root = (XDocument) _container;
                 Logger.Trace("Returning Root.");
-                result = new ZenXmlObject(Container, _comparison);
+                result = new ZenXmlObject(root.Root, _comparison);
                 return true;
+            }
+
+            var asElement = Container as XElement;
+
+            if(asElement != null)
+            {
+                var attribute = asElement.Attributes().SingleOrDefault(x => x.Name.LocalName.Equals(binder.Name, _comparison));
+                if(attribute != null)
+                {
+                    result = attribute.Value;
+                    return true;
+                }
             }
 
             var element = Container.Elements().SingleOrDefault(x => x.Name.LocalName.Equals(binder.Name, _comparison));
@@ -103,6 +116,7 @@ namespace ZenXml.Core
                 return true;
             }
 
+            Logger.Trace(string.Format("Could not find {0}", binder.Name));
             result = null;
             return true;
         }
