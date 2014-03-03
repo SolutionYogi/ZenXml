@@ -112,17 +112,6 @@ namespace ZenXml.Test
             Logger.Info(zenXml.Root.Item3.As<int>());
         }
 
-
-        [Fact]
-        public void TestItem4()
-        {
-            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
-            foreach(var item4 in zenXml.Root.Item4)
-            {
-                Logger.Info(item4.InnerText);
-            }
-        }
-
         [Fact]
         public void TestCustomers()
         {

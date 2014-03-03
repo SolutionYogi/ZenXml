@@ -11,8 +11,6 @@ namespace ZenXml.Core
     {
         private const string RootPropertyName = "Root";
 
-        private const string InnerTextPropertyName = "InnerText";
-
         private const string AsEnumerableMethodName = "AsEnumerable";
 
         private const string AsMethodName = "As";
@@ -31,16 +29,6 @@ namespace ZenXml.Core
         private bool IsRoot
         {
             get { return _container is XDocument; }
-        }
-
-        private XElement Element
-        {
-            get { return Container as XElement; }
-        }
-
-        private bool IsXElement
-        {
-            get { return Container is XElement; }
         }
 
         protected ZenXmlObject(XContainer container, StringComparison comparison)
@@ -120,7 +108,12 @@ namespace ZenXml.Core
                     throw new InvalidOperationException("The As method must be called with a single type parameter.");
 
                 if(typeList.Count > 1)
-                    throw new InvalidOperationException(string.Format("The As method must be called with a single type parameter. Current method call passed multiple type parameter. Type parameter list: [{0}]", string.Join(", ", typeList.Select(x => x.Name))));
+                {
+                    throw new InvalidOperationException(
+                        string.Format(
+                            "The As method must be called with a single type parameter. Current method call passed multiple type parameter. Type parameter list: [{0}]",
+                            string.Join(", ", typeList.Select(x => x.Name))));
+                }
 
                 if(args.Length != 0)
                     throw new InvalidOperationException(string.Format("As method must be called without parameters. Current parameter count: {0}", args.Length));
@@ -145,30 +138,11 @@ namespace ZenXml.Core
                 return true;
             }
 
-            return IsXElement ? TryGetMemberXElement(binder, out result) : TryGetMemberXContainer(binder, out result);
+            return TryGetMemberXContainer(binder, out result);
         }
 
         private bool TryGetMemberXContainer(GetMemberBinder binder, out object result)
         {
-            if(binder.Name.Equals(InnerTextPropertyName, _comparison))
-            {
-                result = Container.ToString();
-                return true;
-            }
-
-            Logger.Trace("TryGetMemberXContainer final case.");
-            result = null;
-            return false;
-        }
-
-        private bool TryGetMemberXElement(GetMemberBinder binder, out object result)
-        {
-            if(binder.Name.Equals(InnerTextPropertyName, _comparison))
-            {
-                result = Element.ToString();
-                return true;
-            }
-
             var attribute = GetAttribute(binder.Name);
 
             if(attribute != null)
@@ -177,7 +151,7 @@ namespace ZenXml.Core
                 return true;
             }
 
-            var matchingChilds = Element.Elements().Where(x => x.Name.LocalName.Equals(binder.Name, _comparison)).ToList();
+            var matchingChilds = Container.Elements().Where(x => x.Name.LocalName.Equals(binder.Name, _comparison)).ToList();
 
             if(matchingChilds.Count == 0)
             {
@@ -205,12 +179,13 @@ namespace ZenXml.Core
 
         private XAttribute GetAttribute(string name)
         {
-            return Element.Attributes().SingleOrDefault(x => x.Name.LocalName.Equals(name, _comparison));
+            var element = Container as XElement;
+            return element == null ? null : element.Attributes().SingleOrDefault(x => x.Name.LocalName.Equals(name, _comparison));
         }
 
         public override string ToString()
         {
             return Container.ToString();
-        } 
+        }
     }
 }
