@@ -15,6 +15,8 @@ namespace ZenXml.Core
 
         private const string AsEnumerableMethodName = "AsEnumerable";
 
+        private const string AsMethodName = "As";
+
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly XContainer _container;
@@ -92,11 +94,38 @@ namespace ZenXml.Core
             return new ZenXmlObject(document, comparison);
         }
 
+        public override bool TryConvert(ConvertBinder binder, out object result)
+        {
+            if(binder.Type == typeof(string))
+            {
+                result = Container.ToString();
+                return true;
+            }
+
+            return base.TryConvert(binder, out result);
+        }
+
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            if(binder.Name.Equals(AsEnumerableMethodName))
+            if(binder.Name.Equals(AsEnumerableMethodName, StringComparison.OrdinalIgnoreCase))
             {
                 result = _container.Elements().Select(x => new ZenXmlObject(x, _comparison));
+                return true;
+            }
+
+            if(binder.Name.Equals(AsMethodName, StringComparison.OrdinalIgnoreCase))
+            {
+                var typeList = binder.GetGenericTypeArguments();
+                if(typeList.Count == 0)
+                    throw new InvalidOperationException("The As method must be called with a single type parameter.");
+
+                if(typeList.Count > 1)
+                    throw new InvalidOperationException(string.Format("The As method must be called with a single type parameter. Current method call passed multiple type parameter. Type parameter list: [{0}]", string.Join(", ", typeList.Select(x => x.Name))));
+
+                if(args.Length != 0)
+                    throw new InvalidOperationException(string.Format("As method must be called without parameters. Current parameter count: {0}", args.Length));
+
+                result = binder.GetGenericTypeArguments().Single().Name;
                 return true;
             }
 
@@ -108,7 +137,7 @@ namespace ZenXml.Core
         {
             Logger.Trace(string.Format("Binder.Name: {0}", binder.Name));
 
-            if(binder.Name.Equals(RootPropertyName) && IsRoot)
+            if(binder.Name.Equals(RootPropertyName, StringComparison.OrdinalIgnoreCase) && IsRoot)
             {
                 var root = (XDocument) _container;
                 Logger.Trace("Returning Root.");
@@ -136,7 +165,7 @@ namespace ZenXml.Core
         {
             if(binder.Name.Equals(InnerTextPropertyName, _comparison))
             {
-                result = Element.Value;
+                result = Element.ToString();
                 return true;
             }
 
@@ -178,5 +207,10 @@ namespace ZenXml.Core
         {
             return Element.Attributes().SingleOrDefault(x => x.Name.LocalName.Equals(name, _comparison));
         }
+
+        public override string ToString()
+        {
+            return Container.ToString();
+        } 
     }
 }
