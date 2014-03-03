@@ -49,6 +49,11 @@ namespace ZenXml.Test
             get { return GetXmlFile("CustomerOrder.xml"); }
         }
 
+        private static XDocument Manifest
+        {
+            get { return GetXmlFile("ApplicationManifest.xml"); }
+        }
+
         private static void ConfigureNLog()
         {
             var consoleTarget = new ConsoleTarget();
@@ -104,6 +109,13 @@ namespace ZenXml.Test
             Logger.Info(zenXml.Root.Item3.Item3_1);
         }
 
+        [Fact]
+        public void TestWithMultipleNamespace()
+        {
+            var zenXml = ZenXmlObject.CreateFromXContainer(Manifest);
+            Logger.Info(zenXml.Root.Description.Publisher);
+            Logger.Info(zenXml.Root.CompatibleFrameworks.Framework.TargetVersion);
+        }
 
         [Fact]
         public void TestAsMethod()

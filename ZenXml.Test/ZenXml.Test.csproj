@@ -59,6 +59,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="XmlFiles\ApplicationManifest.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="XmlFiles\CustomerOrder.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
