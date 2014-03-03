@@ -87,22 +87,31 @@ namespace ZenXml.Test
         public void TestItem1()
         {
             var zenXml = ZenXmlObject.CreateFromXml(TestXml);
-            Logger.Info((object) zenXml.Root.Item1);
+            Logger.Info(zenXml.Root.Item1);
         }
 
         [Fact]
         public void TestItem2()
         {
             var zenXml = ZenXmlObject.CreateFromXml(TestXml);
-            Logger.Info((object) zenXml.Root.Item2.Attribute1);
+            Logger.Info(zenXml.Root.Item2.Attribute1);
         }
 
         [Fact]
         public void TestItem3()
         {
             var zenXml = ZenXmlObject.CreateFromXml(TestXml);
-            Logger.Info((object) zenXml.Root.Item3.Item3_1);
+            Logger.Info(zenXml.Root.Item3.Item3_1);
         }
+
+
+        [Fact]
+        public void TestAsMethod()
+        {
+            var zenXml = ZenXmlObject.CreateFromXml(TestXml);
+            Logger.Info(zenXml.Root.Item3.As<int>());
+        }
+
 
         [Fact]
         public void TestItem4()
